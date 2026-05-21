@@ -12,6 +12,9 @@ st.set_page_config(page_title="Votación Clase", layout="centered")
 BASE_DIR = Path(__file__).parent
 ESTADO_PATH = BASE_DIR / "estado.txt"
 PREGUNTAS_ACTIVAS_PATH = BASE_DIR / "preguntas_activas.csv"
+ARCHIVO_PREGUNTAS_NOMBRE_PATH = (
+    BASE_DIR / "archivo_preguntas_nombre.txt"
+)
 CONFIG_PATH = BASE_DIR / "config.txt"
 
 query_params = st.query_params
@@ -68,6 +71,7 @@ def guardar_en_google_sheets(nueva_respuesta):
 
     fila = [
         nueva_respuesta["fecha_hora"],
+        nueva_respuesta["archivo_preguntas"],
         nueva_respuesta["nombre"],
         nueva_respuesta["pregunta_id"],
         nueva_respuesta["pregunta"],
@@ -103,6 +107,9 @@ if modo_profesor:
             if archivo_preguntas is not None:
                 contenido = archivo_preguntas.getvalue()
                 PREGUNTAS_ACTIVAS_PATH.write_bytes(contenido)
+                ARCHIVO_PREGUNTAS_NOMBRE_PATH.write_text(
+                        archivo_preguntas.name
+)
                 guardar_config(nombre_respuestas)
 
                 preguntas_temp = pd.read_csv(
@@ -318,6 +325,11 @@ if not modo_profesor and st.button("Enviar respuesta"):
         else:
             nueva_respuesta_dict = {
                 "fecha_hora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "archivo_preguntas": (
+                    ARCHIVO_PREGUNTAS_NOMBRE_PATH.read_text().strip()
+                     if ARCHIVO_PREGUNTAS_NOMBRE_PATH.exists()
+                     else ""
+                ),
                 "nombre": nombre_limpio,
                 "pregunta_id": str(pregunta["id"]),
                 "pregunta": str(pregunta["pregunta"]),
@@ -334,6 +346,18 @@ if not modo_profesor and st.button("Enviar respuesta"):
             )
 
             respuestas.to_csv(RESPUESTAS_PATH, index=False)
+
+            st.session_state["mensaje_exito"] = (
+                f"{nombre_limpio}, "
+                f"su respuesta {respuesta} "
+                f"fue registrada."
+            )
+
+            st.session_state["mensaje_exito_pregunta_id"] = str(
+                pregunta["id"]
+            )
+
+            guardar_en_google_sheets(nueva_respuesta_dict)
 
             try:
                 guardar_en_google_sheets(nueva_respuesta_dict)
