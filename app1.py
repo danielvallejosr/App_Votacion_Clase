@@ -4,6 +4,8 @@ from pathlib import Path
 from datetime import datetime
 import plotly.express as px
 from streamlit_autorefresh import st_autorefresh
+import gspread
+from google.oauth2.service_account import Credentials
 
 st.set_page_config(page_title="Votación Clase", layout="centered")
 
@@ -48,6 +50,33 @@ def get_respuestas_path():
     if not nombre.endswith(".csv"):
         nombre += ".csv"
     return BASE_DIR / nombre
+
+def guardar_en_google_sheets(nueva_respuesta):
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive",
+    ]
+
+    credentials = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"],
+        scopes=scopes
+    )
+
+    gc = gspread.authorize(credentials)
+
+    sheet = gc.open("Respuestas_App_Clase").worksheet("Respuestas")
+
+    fila = [
+        nueva_respuesta["fecha_hora"],
+        nueva_respuesta["nombre"],
+        nueva_respuesta["pregunta_id"],
+        nueva_respuesta["pregunta"],
+        nueva_respuesta["respuesta"],
+        nueva_respuesta["respuesta_texto"],
+        nueva_respuesta["correcta"],
+    ]
+
+    sheet.append_row(fila)
 
 
 # -----------------------------
@@ -287,7 +316,7 @@ if not modo_profesor and st.button("Enviar respuesta"):
             st.error("Ya registraste una respuesta para esta pregunta.")
 
         else:
-            nueva_respuesta = pd.DataFrame([{
+            nueva_respuesta_dict = {
                 "fecha_hora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "nombre": nombre_limpio,
                 "pregunta_id": pregunta["id"],
@@ -295,7 +324,9 @@ if not modo_profesor and st.button("Enviar respuesta"):
                 "respuesta": respuesta,
                 "respuesta_texto": opciones[respuesta],
                 "correcta": pregunta.get("correcta", "")
-            }])
+            }
+
+            nueva_respuesta = pd.DataFrame([nueva_respuesta_dict])
 
             respuestas = pd.concat(
                 [respuestas_previas, nueva_respuesta],
@@ -303,6 +334,8 @@ if not modo_profesor and st.button("Enviar respuesta"):
             )
 
             respuestas.to_csv(RESPUESTAS_PATH, index=False)
+
+            guardar_en_google_sheets(nueva_respuesta_dict)
 
             st.session_state["mensaje_exito"] = (
                 f"{nombre_limpio}, "
