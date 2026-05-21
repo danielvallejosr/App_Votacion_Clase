@@ -337,9 +337,19 @@ if not modo_profesor and st.button("Enviar respuesta"):
 
             try:
                 guardar_en_google_sheets(nueva_respuesta_dict)
-                st.success("Respuesta guardada también en Google Sheets.")
+
+                st.session_state["mensaje_exito"] = (
+                    f"{nombre_limpio}, "
+                    f"su respuesta {respuesta} "
+                    f"fue registrada."
+                )
+
+                st.session_state["mensaje_exito_pregunta_id"] = str(
+                     pregunta["id"]
+                )
+
             except Exception as e:
-                st.error(f"Error al guardar en Google Sheets: {e}")
+                   st.error(f"Error al guardar en Google Sheets: {e}")
 
             st.session_state["mensaje_exito"] = (
                 f"{nombre_limpio}, "
