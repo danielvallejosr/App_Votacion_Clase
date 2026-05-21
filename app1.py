@@ -319,11 +319,11 @@ if not modo_profesor and st.button("Enviar respuesta"):
             nueva_respuesta_dict = {
                 "fecha_hora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "nombre": nombre_limpio,
-                "pregunta_id": pregunta["id"],
-                "pregunta": pregunta["pregunta"],
+                "pregunta_id": str(pregunta["id"]),
+                "pregunta": str(pregunta["pregunta"]),
                 "respuesta": respuesta,
                 "respuesta_texto": opciones[respuesta],
-                "correcta": pregunta.get("correcta", "")
+                "correcta": str(pregunta.get("correcta", "")),
             }
 
             nueva_respuesta = pd.DataFrame([nueva_respuesta_dict])
