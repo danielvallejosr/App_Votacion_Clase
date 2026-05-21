@@ -335,7 +335,11 @@ if not modo_profesor and st.button("Enviar respuesta"):
 
             respuestas.to_csv(RESPUESTAS_PATH, index=False)
 
-            guardar_en_google_sheets(nueva_respuesta_dict)
+            try:
+                guardar_en_google_sheets(nueva_respuesta_dict)
+                st.success("Respuesta guardada también en Google Sheets.")
+            except Exception as e:
+                st.error(f"Error al guardar en Google Sheets: {e}")
 
             st.session_state["mensaje_exito"] = (
                 f"{nombre_limpio}, "
