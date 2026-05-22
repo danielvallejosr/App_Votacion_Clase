@@ -334,15 +334,6 @@ if not modo_profesor:
 
     st.title("Respuesta")
 
-    if (
-         "mensaje_exito" in st.session_state
-         and st.session_state.get("mensaje_exito_pregunta_id") == str(pregunta["id"])
-    ):
-
-        st.success(
-            st.session_state["mensaje_exito"]
-        )
-
     if "nombre_alumno" not in st.session_state:
         st.session_state["nombre_alumno"] = ""
 
@@ -360,8 +351,20 @@ if not modo_profesor:
 
             nombre = st.session_state["nombre_alumno"]
 
+            mensaje_respuesta = ""
+
+            if (
+                "mensaje_exito_pregunta_id"
+                in st.session_state
+                and st.session_state["mensaje_exito_pregunta_id"]
+                == str(pregunta["id"])
+            ):
+
+                mensaje_respuesta = "  ✅ Respuesta registrada"
+
             st.info(
                 f"Alumno: {nombre}"
+                f"{mensaje_respuesta}"
             )
 
     st.subheader(f"Pregunta {pregunta['id']}")
@@ -400,13 +403,44 @@ if not modo_profesor:
     texto_timer = f"{minutos:02}:{segundos:02}"
 
     if tiempo_restante_alumno > 10:
-        st.success(f"Tiempo restante: {texto_timer}")
+
+        st.success(
+                f"Tiempo restante: {texto_timer}"
+        )
+
     elif tiempo_restante_alumno > 5:
-        st.warning(f"Tiempo restante: {texto_timer}")
+
+            st.warning(
+                f"Tiempo restante: {texto_timer}"
+            )
+
     elif tiempo_restante_alumno > 0:
-        st.error(f"Tiempo restante: {texto_timer}")
+
+        st.error(
+                f"Tiempo restante: {texto_timer}"
+        )
+
     else:
-        st.error("Tiempo finalizado")
+
+            estado_visualizacion_alumno = (
+                leer_estado_visualizacion()
+    )
+
+            if estado_visualizacion_alumno == "correcta":
+
+                correcta_alumno = str(
+                    pregunta.get("correcta", "")
+                ).strip().upper()
+
+                st.success(
+                    f"Respuesta correcta: {correcta_alumno}"
+                )
+
+            else:
+
+                st.error(
+                        "Tiempo finalizado"
+                )
 
 
 else:
@@ -660,6 +694,31 @@ if modo_profesor:
             )
         else:
             resultados["Estado"] = "Otra"
+
+        correctas = conteo.get(correcta, 0)
+
+        if estado_visualizacion == "correcta":
+            mensaje_correcta = (
+                    f"Respuesta correcta: {correcta} "
+                    f"({correctas} respuestas)"
+            )
+        else:
+                mensaje_correcta = "&nbsp;"
+
+        st.markdown(
+                f"""
+                <div style="
+                        min-height: 48px;
+                        display: flex;
+                        align-items: center;
+                        font-size: 28px;
+                        font-weight: 600;
+                ">
+                        {mensaje_correcta}
+                </div>
+                """,
+                unsafe_allow_html=True
+        )
 
         fig = px.bar(
             resultados.iloc[::-1],
