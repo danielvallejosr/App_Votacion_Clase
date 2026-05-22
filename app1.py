@@ -357,8 +357,6 @@ if not modo_profesor and st.button("Enviar respuesta"):
                 pregunta["id"]
             )
 
-            guardar_en_google_sheets(nueva_respuesta_dict)
-
             try:
                 guardar_en_google_sheets(nueva_respuesta_dict)
 
